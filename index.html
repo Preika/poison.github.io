@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ядовитые растения Иркутской области</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f0f4f3;
+            --text-color: #2b3a42;
+            --card-bg: #ffffff;
+            --deadly-color: #d62828;
+            --high-color: #f77f00;
+            --warn-color: #fcbf49;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: #40916c; border-radius: 5px; }
+
+        /* ОБНОВЛЕННАЯ ШАПКА С КАРТИНКОЙ ЛЕСА */
+        header {
+            /* Поверх картинки наложен зеленый полупрозрачный градиент, чтобы текст легко читался */
+            background: linear-gradient(135deg, rgba(27, 67, 50, 0.85), rgba(64, 145, 108, 0.85)), 
+                        url('https://images.unsplash.com/photo-1448375240586-882707db888b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            color: white;
+            padding: 5rem 1rem 4rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 1.2rem 2rem;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50px;
+            font-size: 1.1rem;
+            background: rgba(0,0,0,0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+            outline: none;
+            transition: all 0.4s ease;
+        }
+
+        #searchInput::placeholder { color: rgba(255,255,255,0.8); }
+        #searchInput:focus {
+            background: rgba(0,0,0,0.4);
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+
+        main {
+            max-width: 1300px;
+            margin: -2.5rem auto 3rem;
+            padding: 0 1.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeUp 0.6s forwards;
+        }
+
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .card-img-wrapper {
+            width: 100%;
+            height: 240px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .card:hover img { transform: scale(1.1); }
+
+        .card-content { padding: 1.5rem; }
+        .card-content h2 { color: #1b4332; margin-bottom: 0.5rem; font-weight: 800; }
+        .card-content p { color: #555; font-size: 0.95rem; }
+
+        .badge {
+            position: absolute;
+            top: 15px; right: 15px;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+
+        .level-deadly { background-color: var(--deadly-color); animation: pulse 2s infinite; }
+        .level-high { background-color: var(--high-color); }
+        .level-warn { background-color: var(--warn-color); color: #000; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(214, 40, 40, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(214, 40, 40, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(214, 40, 40, 0); }
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none; 
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active { opacity: 1; pointer-events: auto; }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 25px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.4s ease;
+        }
+
+        .modal.active .modal-content { transform: scale(1); }
+
+        .close-btn {
+            position: absolute;
+            top: 20px; right: 25px;
+            font-size: 35px;
+            color: #888;
+            cursor: pointer;
+            transition: 0.3s;
+            line-height: 1;
+        }
+
+        .close-btn:hover { color: #333; transform: rotate(90deg); }
+
+        .modal-img {
+            width: 100%; height: 350px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title { font-size: 2.2rem; color: #1b4332; margin-bottom: 1rem; }
+        
+        .info-box { padding: 1.2rem; border-radius: 12px; margin-top: 1.5rem; font-size: 0.95rem; }
+        .symptoms-box { background-color: #fff0f0; border-left: 6px solid var(--deadly-color); }
+        .help-box { background-color: #fff9e6; border-left: 6px solid var(--warn-color); }
+        .info-box strong { display: block; font-size: 1.1rem; margin-bottom: 0.5rem; }
+
+        footer { text-align: center; padding: 2rem; color: #888; margin-top: 3rem; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Ядовитые растения<br>Иркутской области</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="🔍 Введите название растения...">
+        </div>
+    </header>
+
+    <main>
+        <div id="plantsGrid" class="grid"></div>
+    </main>
+
+    <div id="plantModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <img id="modalImg" class="modal-img" src="" alt="">
+            <h2 id="modalTitle" class="modal-title"></h2>
+            <p id="modalDesc"></p>
+            <div class="info-box symptoms-box">
+                <strong>⚠️ Симптомы отравления:</strong>
+                <p id="modalSymptoms"></p>
+            </div>
+            <div class="info-box help-box">
+                <strong>🚑 Первая помощь:</strong>
+                <p>Немедленно вызвать скорую помощь (103 или 112). Если пострадавший в сознании — дать обильное питье, попытаться вызвать рвоту, дать активированный уголь.</p>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const plants = [
+            {
+                name: "Борец (Аконит)",
+                dangerText: "Смертельно опасно",
+                dangerLevel: "deadly", 
+                image: "img/akonit.png",
+                description: "Встречается повсеместно в лесах и на лугах. Очень красивое растение с сине-фиолетовыми цветами. Ядовито всё растение, особенно корни.",
+                symptoms: "Онемение рта и языка, жжение, тошнота, судороги, нарушение ритма сердца вплоть до его остановки."
+            },
+            {
+                name: "Вёх ядовитый (Цикута)",
+                dangerText: "Смертельно опасно",
+                dangerLevel: "deadly",
+                image: "img/cikuta.png",
+                description: "Растет по берегам рек и озер. Пахнет морковью, корневище сладковатое на вкус. Одно из самых ядовитых растений России.",
+                symptoms: "Рвота, пена изо рта, сильные судороги, паралич дыхания (через 15-20 минут)."
+            },
+            {
+                name: "Вороний глаз",
+                dangerText: "Смертельно опасно",
+                dangerLevel: "deadly",
+                image: "img/crown_eye.png",
+                description: "Четыре широких листа образуют крест, а в центре располагается единственная крупная черная ягода, похожая на чернику.",
+                symptoms: "Тошнота, рвота, расстройство работы сердца (вплоть до остановки), паралич дыхательного центра."
+            },
+            {
+                name: "Болиголов пятнистый",
+                dangerText: "Смертельно опасно",
+                dangerLevel: "deadly",
+                image: "img/boligolov.png",
+                description: "Высокое растение с белыми зонтиками. Стебель покрыт красноватыми пятнами. Издает неприятный мышиный запах. Листья путают с петрушкой, а корень — с хреном.",
+                symptoms: "Тяжесть в ногах, холод в конечностях, восходящий паралич (начиная с ног и переходя к легким), удушье при сохранении ясного сознания."
+            },
+            {
+                name: "Борщевик Сосновского",
+                dangerText: "Высокая опасность",
+                dangerLevel: "high",
+                image: "img/sosno.png",
+                description: "Огромное растение с белыми зонтиками. Содержит вещества, лишающие кожу защиты от ультрафиолета.",
+                symptoms: "При попадании сока на кожу под воздействием солнца появляются тяжелейшие ожоги, огромные волдыри. При попадании в глаза — слепота."
+            },
+            {
+                name: "Волчье лыко (Дафна)",
+                dangerText: "Высокая опасность",
+                dangerLevel: "high",
+                image: "img/dafna.png",
+                description: "Небольшой лесной кустарник. Весной цветет розовыми ароматными цветами, летом появляются ярко-красные ягоды.",
+                symptoms: "Сильное жжение во рту и горле, боли в желудке, рвота с кровью, судороги."
+            },
+            {
+                name: "Лютик ядовитый",
+                dangerText: "Высокая опасность",
+                dangerLevel: "high",
+                image: "img/lutik.png",
+                description: "Встречается по берегам водоемов, на болотах и в канавах. Имеет небольшие желтые цветки. Это самый ядовитый вид из всех лютиков.",
+                symptoms: "Сок вызывает сильное раздражение кожи и волдыри. При проглатывании — ожоги слизистой рта и ЖКТ, сильная боль, рвота, помрачение сознания."
+            },
+            {
+                name: "Белена чёрная",
+                dangerText: "Высокая опасность",
+                dangerLevel: "high",
+                image: "img/belena.png",
+                description: "Сорное растение. Покрыто липкими волосками, цветки грязно-желтые с фиолетовыми прожилками. Дети часто травятся ее семенами (похожи на мак).",
+                symptoms: "Спутанность сознания, бред, галлюцинации, сильная сухость во рту, расширенные зрачки, агрессия."
+            },
+            {
+                name: "Воронец красноплодный",
+                dangerText: "Высокая опасность",
+                dangerLevel: "high",
+                image: "img/voronec.png",
+                description: "Растет в хвойных и смешанных лесах. Имеет резкий неприятный запах, но яркие красные ягоды могут привлечь неопытного человека.",
+                symptoms: "Тошнота, рвота, сильные боли в животе, расстройство дыхания и пульса. Прикосновение к листьям может вызвать волдыри на коже."
+            },
+            {
+                name: "Чемерица Лобеля",
+                dangerText: "Высокая опасность",
+                dangerLevel: "high",
+                image: "img/chemerica.png",
+                description: "Крупное растение с широкими складчатыми листьями. Весной ее молодые побеги часто путают с черемшой (колбой). Корни ядовиты круглый год.",
+                symptoms: "Сильное чихание (если вдохнуть пыль), жжение в горле, мучительная рвота, резкое падение артериального давления, замедление пульса вплоть до комы."
+            },
+            {
+                name: "Багульник болотный",
+                dangerText: "Средняя опасность",
+                dangerLevel: "warn",
+                image: "img/bagulnik.png",
+                description: "Вечнозеленый кустарник, растущий на болотах и в сырых хвойных лесах. Цветет белыми зонтиками. Содержит эфирные масла с резким, дурманящим запахом.",
+                symptoms: "При долгом нахождении в зарослях (например, при сборе ягод поблизости) возникают сильная головная боль, головокружение, тошнота, слабость."
+            }
+        ];
+
+        const grid = document.getElementById('plantsGrid');
+        const searchInput = document.getElementById('searchInput');
+        const modal = document.getElementById('plantModal');
+        const closeBtn = document.querySelector('.close-btn');
+
+        // Картинка-заглушка, если оригинальная не загрузилась
+        const fallbackImage = "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+
+        function renderPlants(filterText = '') {
+            grid.innerHTML = ''; 
+            const filteredPlants = plants.filter(plant => plant.name.toLowerCase().includes(filterText.toLowerCase()));
+
+            if (filteredPlants.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; font-size: 1.2rem; color: #777;">Растения не найдены.</p>';
+                return;
+            }
+
+            filteredPlants.forEach((plant, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.animationDelay = `${index * 0.1}s`;
+                
+                // В теге <img> добавлено onerror - если картинка сломана, загрузится запасная
+                card.innerHTML = `
+                    <div class="badge level-${plant.dangerLevel}">${plant.dangerText}</div>
+                    <div class="card-img-wrapper">
+                        <img src="${plant.image}" alt="${plant.name}" onerror="this.src='${fallbackImage}'">
+                    </div>
+                    <div class="card-content">
+                        <h2>${plant.name}</h2>
+                        <p>${plant.description.substring(0, 85)}...</p>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => openModal(plant));
+                grid.appendChild(card);
+            });
+        }
+
+        function openModal(plant) {
+            const img = document.getElementById('modalImg');
+            img.src = plant.image;
+            img.onerror = () => { img.src = fallbackImage; }; // защита для модального окна
+            
+            document.getElementById('modalTitle').textContent = plant.name;
+            document.getElementById('modalDesc').textContent = plant.description;
+            document.getElementById('modalSymptoms').textContent = plant.symptoms;
+            
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.classList.add('active'); }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+            document.body.style.overflow = '';
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        searchInput.addEventListener('input', (e) => { renderPlants(e.target.value); });
+
+        renderPlants();
+    </script>
+</body>
+</html>
